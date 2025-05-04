@@ -8,44 +8,36 @@ CREATE TABLE ProductDetail (
 -- Insert sample data
 INSERT INTO ProductDetail VALUES
 (101, 'John Doe', 'Laptop, Mouse'),
-(102, 'Jane Smith', 'Tablet, Keyboard, Mouse'),
+(101, 'John Doe', 'Mouse'),
+(102, 'Jane Smith', 'Tablet),
+(102, 'Jane Smith', 'Keyboard'),
+(102, 'Jane Smith', 'Mouse'),
 (103, 'Emily Clark', 'Phone');
 
-CREATE TABLE OrderDetails_1NF AS
-SELECT 
-    OrderID, 
-    CustomerName, 
-    TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(Products, ',', numbers.n), ',', -1)) AS Product,
-    1 AS Quantity
-FROM 
-    ProductDetail
-JOIN 
-    (SELECT 1 AS n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4) numbers
-    ON CHAR_LENGTH(Products) - CHAR_LENGTH(REPLACE(Products, ',', '')) >= numbers.n - 1;
 
 -- Question 2: Transforming to 2NF (Second Normal Form)
-CREATE TABLE Orders AS
-SELECT DISTINCT OrderID, CustomerName
-FROM OrderDetails_1NF;
+CREATE TABLE Orders (
+    OrderID INT PRIMARY KEY,
+    CustomerName VARCHAR(100)
+);
+INSERT INTO Orders (OrderID, CustomerName)
+VALUES
+(101, 'John Doe'),
+(102, 'Jane Smith'),
+(103, 'Emily Clark');
 
--- Create OrderProducts table
-CREATE TABLE OrderProducts AS
-SELECT OrderID, Product, Quantity
-FROM OrderDetails_1NF;
-
-ALTER TABLE Orders ADD PRIMARY KEY (OrderID);
-ALTER TABLE OrderProducts ADD PRIMARY KEY (OrderID, Product);
-ALTER TABLE OrderProducts ADD CONSTRAINT fk_order
-FOREIGN KEY (OrderID) REFERENCES Orders(OrderID);
-
-SELECT 'Original ProductDetail table (not 1NF):' AS Description;
-SELECT * FROM ProductDetail;
-
-SELECT '1NF-compliant table (OrderDetails_1NF):' AS Description;
-SELECT * FROM OrderDetails_1NF;
-
-SELECT '2NF-compliant Orders table:' AS Description;
-SELECT * FROM Orders;
-
-SELECT '2NF-compliant OrderProducts table:' AS Description;
-SELECT * FROM OrderProducts;
+CREATE TABLE Product (
+    OrderID INT,
+    Product VARCHAR(100),
+    Quantity INT,
+    PRIMARY KEY (OrderID, Product),
+    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID)
+);
+INSERT INTO Product (OrderID, Product, Quantity)
+VALUES
+(101, 'Laptop', 2),
+(101, 'Mouse', 1),
+(102, 'Tablet', 3),
+(102, 'Keyboard', 1),
+(102, 'Mouse', 2),
+(103, 'Phone', 1);
